@@ -3,17 +3,16 @@ namespace WFAEsiniBulOyunu
     public partial class Form1 : Form
     {
         Random rnd = new Random();
-        int boyut = 10; // satýr ve sütun sayýsý
+        int boyut = 2; // satýr ve sütun sayýsý
         List<string> resimler = new List<string>();
         List<string> kartlar = new List<string>();
-
+        List<PictureBox> aciklar = new List<PictureBox>();
+        int yokEdilenAdet = 0;
 
         public Form1()
         {
             ResimleriYukle();
             InitializeComponent();
-            KartlariSec();
-            KartlariDiz();
 
         }
 
@@ -36,14 +35,72 @@ namespace WFAEsiniBulOyunu
                     resimKutusu.Left = x * (resimKutusu.Width + bosluk);
                     resimKutusu.Top = y * (resimKutusu.Height + bosluk);
 
-                    resimKutusu.ImageLocation = @"Image\" + kartlar[i];
+                    resimKutusu.ImageLocation = "back.jpg";
                     resimKutusu.SizeMode = PictureBoxSizeMode.Zoom;
+                    resimKutusu.Click += ResimKutusu_Click;
                     pnlKartlar.Controls.Add(resimKutusu);
-
                     i++;
-
                 }
             }
+        }
+        //sender :Týklanan Resim Kutusunu Taþýr.
+        private void ResimKutusu_Click(object? sender, EventArgs e)
+        {
+            PictureBox tiklanan = (PictureBox)sender;
+            //eðer ayný karta 2. kez týklandýysa bir þey yapmadan çýk
+            if (aciklar.Count == 1 && aciklar[0] == tiklanan)
+                return;
+            if (aciklar.Count == 2)
+            {
+                AciklariKapat();
+            }
+
+            aciklar.Add(tiklanan);
+            int kartIndex = (int)tiklanan.Tag;
+            string resim = kartlar[kartIndex];
+            tiklanan.ImageLocation = @"Image\" + resim;
+            //2.kart açýldýðýnda yapýlacak eþleþme kontrolü
+            if (aciklar.Count == 2 && aciklar[0].ImageLocation == aciklar[1].ImageLocation)
+            {
+                Application.DoEvents();
+                AciklariGecikmeliYokEt();
+                AciklariKapat();
+            }
+            //Oyun Bitti Mi
+            if (yokEdilenAdet == kartlar.Count)
+            {
+                MessageBox.Show("Oyun Bitti");
+                OyunuSifirla();
+            }
+        }
+
+        private void OyunuSifirla()
+        {
+            pnlKartlar.Controls.Clear();
+            yokEdilenAdet = 0;
+            kartlar.Clear();
+            aciklar.Clear();
+            gboYeniOyun.Show();
+            pnlKartlar.BackColor = Color.Transparent;
+        }
+
+        private void AciklariGecikmeliYokEt()
+        {
+            Thread.Sleep(500);
+            foreach (PictureBox kutu in aciklar)
+            {
+                pnlKartlar.Controls.Remove(kutu);
+                yokEdilenAdet++;
+            }
+        }
+
+        private void AciklariKapat()
+        {
+            foreach (PictureBox kutu in aciklar)
+            {
+                kutu.ImageLocation = "back.jpg";
+            }
+            aciklar.Clear();
         }
 
         private void KartlariSec()
@@ -61,7 +118,6 @@ namespace WFAEsiniBulOyunu
             kartlar.AddRange(kartlar);
             KartlariKaristir();
         }
-
         private void KartlariKaristir()
         {
             string yedek;
@@ -74,7 +130,6 @@ namespace WFAEsiniBulOyunu
                 kartlar[tahlihliIndex] = yedek;
             }
         }
-
         private void ResimleriYukle()
         {
             DirectoryInfo klasor = new DirectoryInfo("Image");
@@ -83,7 +138,46 @@ namespace WFAEsiniBulOyunu
             foreach (FileInfo dosya in dosyalar)
                 resimler.Add(dosya.Name);
         }
+
+        private void btnOyunuBaslat_Click(object sender, EventArgs e)
+        {
+            OyunuBaslat();
+        }
+
+        private void OyunuBaslat()
+        {
+            pnlKartlar.BackColor = Color.WhiteSmoke;
+            SeviyeyeKararVer();
+            gboYeniOyun.Hide();
+            KartlariSec();
+            KartlariDiz();
+        }
+
+        private void SeviyeyeKararVer()
+        {
+            if (rb1.Checked) { boyut = 2; }
+            else if (rb2.Checked) { boyut = 4; }
+            else if (rb3.Checked) { boyut = 6; }
+            else if (rb4.Checked) { boyut = 8; }
+            else { boyut = 10; }
+        }
+
+        private void btnYeniOyun_Click(object sender, EventArgs e)
+        {
+            OyunuSifirla();
+        }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
